@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis-155 | Precision Guidance Kit &amp; Multi-Mode Electronic Fuze</title>
+    <!-- SEO -->
+    <meta name="description" content="Aegis-155 PGK - Engineering Prototype for 155mm Artillery Precision Guidance and Smart Electronic Fuze System. Offline-capable simulation dashboard.">
+
+    <!-- =========================================================
+         OFFLINE-FIRST: All dependencies served locally.
+         ========================================================= -->
+
+    <!-- Typography: Outfit (display) & JetBrains Mono (data/mono) — self-hosted -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- KaTeX for crisp mathematical equations rendering — LOCAL -->
+    <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+    <script defer src="/vendor/katex/katex.min.js"></script>
+    <script defer src="/vendor/katex/auto-render.min.js"></script>
+
+    <!-- GSAP for Cinematic Animations — LOCAL -->
+    <script src="/vendor/gsap/gsap.min.js"></script>
+    <script src="/vendor/gsap/ScrollTrigger.min.js"></script>
+
+    <!-- Three.js & OrbitControls for 3D Interactive Shell Model — LOCAL -->
+    <script src="/vendor/three/three.min.js"></script>
+    <script src="/vendor/three/OrbitControls.js"></script>
+
+    <!-- CesiumJS — loaded from CDN with graceful offline fallback.
+         If CDN is unavailable (offline), Cesium tab shows a notice
+         and Three.js 3D view remains the primary visualization. -->
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Widgets/widgets.css" rel="stylesheet" onerror="window.CESIUM_OFFLINE=true">
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js" onerror="window.CESIUM_OFFLINE=true;console.warn('Cesium CDN unavailable — offline mode active. Three.js view is primary.');"></script>
+
+    <!-- Plotly for Monte Carlo 3D Chart — LOCAL -->
+    <script src="/vendor/plotly/plotly.min.js"></script>
+
+    <!-- Mermaid.js for System Architecture Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js" onerror="console.warn('Mermaid CDN unavailable — offline mode active.')"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'dark',
+                    fontFamily: 'Space Grotesk, Outfit, sans-serif',
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <!-- ===== OFFLINE STATUS BANNER (Phase 21) ===== -->
+    <div id="offline-status-banner" style="
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 9999;
+        padding: 6px 16px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        text-align: center;
+        transition: background 0.4s ease;
+    ">
+        <span id="offline-status-icon" style="margin-right: 6px;">🟢</span>
+        <span id="offline-status-text">BACKEND ONLINE</span>
+    </div>
+
+    <!-- Header Navigation -->
+    <header>
+
+        <div class="nav-container">
+            <div class="nav-top-row" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="brand-wrapper" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem;">
+                    <h1 class="brand-title">AEGIS-155 PGK & FUZE SYSTEM</h1>
+                    <p class="brand-sub">Precision Guidance Kit & Multi-Mode Electronic Fuze for 155mm Artillery</p>
+                </div>
+                
+                <div class="header-badges" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span class="badge-cep-target">3D REDUCED-ORDER FLIGHT DYNAMICS MODEL</span>
+                </div>
+
+            <nav class="nav-tabs">
+                
+                <!-- SIMULATION & ANALYSIS -->
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        Simulation & Analytics ▾
+                    </button>
+                    <div class="nav-dropdown-content">
+                        <button class="tab-btn active" data-tab="tab-simulator">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Flight Simulator
+                        </button>
+                        <button class="tab-btn" data-tab="tab-cep">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+                            Monte Carlo CEP
+                        </button>
+                        <button class="tab-btn" data-tab="tab-raw-data">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            Raw Data / Trajectory
+                        </button>
+                    </div>
+                </div>
+
+                <!-- EMBEDDED HARDWARE -->
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                        Embedded Hardware ▾
+                    </button>
+                    <div class="nav-dropdown-content">
+                        <button class="tab-btn" data-tab="tab-hardware">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                            PGK Assembly Architecture
+                        </button>
+                        <button class="tab-btn" data-tab="tab-fuze">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            Electronic Fuze Console
+                        </button>
+                        <button class="tab-btn" data-tab="tab-telemetry">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Hardware Telemetry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SYSTEM DESIGN -->
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        System Design ▾
+                    </button>
+                    <div class="nav-dropdown-content">
+                        <button class="tab-btn" data-tab="tab-architecture">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            System Architecture
+                        </button>
+                        <button class="tab-btn" data-tab="tab-requirements">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                            Requirements Center
+                        </button>
+                        <button class="tab-btn" data-tab="tab-bom">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            BOM & SWaP-C
+                        </button>
+                        <button class="tab-btn" data-tab="tab-assumptions">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Model Assumptions
+                        </button>
+                        <button class="tab-btn" data-tab="tab-version">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            System Version
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TESTING & VALIDATION -->
+                <div class="nav-dropdown">
+                    <button class="nav-dropdown-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Testing & Validation ▾
+                    </button>
+                    <div class="nav-dropdown-content">
+                        <button class="tab-btn" data-tab="tab-credibility">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            Model Credibility
+                        </button>
+                        <button class="tab-btn" data-tab="tab-validation">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Validation Status
+                        </button>
+                        <button class="tab-btn" data-tab="tab-test-center">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                            Test Center
+                        </button>
+                        <button class="tab-btn" data-tab="tab-faults">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Fault Injection Lab
+                        </button>
+                        <button class="tab-btn" data-tab="tab-audit">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Audit Log
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="status-indicators">
+                <button id="btn-generate-report" class="btn" style="padding: 4px 12px; font-size: 0.75rem; border-color: var(--accent-blue); color: var(--accent-blue);">
+                    📄 GENERATE REPORT
+                </button>
+                <div class="status-pill">
+                    <div class="dot-indicator" id="status-gnss-dot"></div>
+                    <span id="status-gnss-text">GNSS: LOCK (12 SAT)</span>
+                </div>
+                <div class="status-pill">
+                    <div class="dot-indicator" id="status-esad-dot"></div>
+                    <span id="status-esad-text">ESAD: ARMED</span>
+                </div>
+            </div>
+            </div> <!-- End nav-top-row -->
+        </div>
+    </header>
+
+    <!-- Main Content Workspace -->
+    <main>
+
+        <!-- TAB 1: FLIGHT SIMULATOR -->
+        <div id="tab-simulator" class="tab-content active">
+            <div class="dashboard-grid">
+                
+                <!-- Left Panel: Firing Parameters & Environmental Control -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            Firing & Environment Controls
+                        </h2>
+                    </div>
+
+                    <div class="control-group" style="margin-top: 0.5rem; margin-bottom: 1rem;">
+                        <div class="control-label" style="font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700;">
+                            <span>Environment Scenario Presets</span>
+                        </div>
+                        <select id="select-scenario" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.25rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.25rem;">
+                            <option value="baseline">Baseline (No Wind)</option>
+                            <option value="low_wind">Low Wind Disturbance</option>
+                            <option value="high_wind">High Wind Disturbance</option>
+                            <option value="cross_wind">Heavy Crosswind</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Launch Elevation Angle ($\theta$)</span>
+                            <span class="control-val" id="val-angle">48.5°</span>
+                        </div>
+                        <input type="range" id="input-angle" min="30" max="65" step="0.5" value="48.5">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Target Distance ($R_{target}$)</span>
+                            <span class="control-val" id="val-distance">24.0 km</span>
+                        </div>
+                        <input type="range" id="input-distance" min="12" max="32" step="0.5" value="24">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Headwind / Tailwind ($W_x$)</span>
+                            <span class="control-val" id="val-wind-x">+5.0 m/s</span>
+                        </div>
+                        <input type="range" id="input-wind-x" min="-25" max="25" step="1" value="5">
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Crosswind Drift ($W_z$)</span>
+                            <span class="control-val" id="val-wind-z">+3.0 m/s</span>
+                        </div>
+                        <input type="range" id="input-wind-z" min="-20" max="20" step="1" value="3">
+                    </div>
+
+                    <!-- Coriolis inputs -->
+                    <div style="border-top: 1px dashed var(--border-steel); padding-top: 0.5rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="font-size: 0.7rem; font-weight: 700; color: var(--accent-cyan); letter-spacing: 0.05em;">EARTH ROTATION / CORIOLIS INPUTS</div>
+                        <div class="control-group" style="margin-bottom: 0.25rem;">
+                            <div class="control-label" style="font-size: 0.75rem;">
+                                <span>Firing Azimuth (Direction)</span>
+                                <span class="control-val" id="val-azimuth">45.0° NE</span>
+                            </div>
+                            <input type="range" id="input-azimuth" min="0" max="360" step="5" value="45" style="height: 4px;">
+                        </div>
+
+                        <div class="control-group" style="margin-bottom: 0.25rem;">
+                            <div class="control-label" style="font-size: 0.75rem;">
+                                <span>Firing Latitude</span>
+                                <span class="control-val" id="val-latitude">21.5° N</span>
+                            </div>
+                            <input type="range" id="input-latitude" min="-90" max="90" step="0.5" value="21.5" style="height: 4px;">
+                        </div>
+                    </div>
+
+                    <label class="toggle-switch">
+                        <span style="font-size: 0.85rem; font-weight: 500;">Enable Altitude Wind Shear</span>
+                        <input type="checkbox" id="toggle-wind-shear">
+                        <span class="toggle-slider"></span>
+                    </label>
+
+                    <!-- Collapsible Wind Shear Layers Controls -->
+                    <div id="wind-shear-controls" style="display: none; flex-direction: column; gap: 0.5rem; background: rgba(0,0,0,0.15); border: 1px solid var(--border-steel); border-radius: var(--radius-sharp); padding: 0.5rem; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.7rem; font-weight: 700; color: var(--tactical-cyan);">WIND PROFILE BY ALTITUDE BAND</div>
+                        
+                        <!-- Low: 0-4km -->
+                        <div class="control-group" style="margin-bottom: 0.25rem;">
+                            <div class="control-label" style="font-size: 0.7rem;">
+                                <span>Low-Alt Wind (0-4 km)</span>
+                                <span class="control-val" id="val-wind-low">3.0 m/s</span>
+                            </div>
+                            <input type="range" id="input-wind-low" min="-20" max="20" step="1" value="3" style="height: 4px;">
+                        </div>
+
+                        <!-- Med: 4-8km -->
+                        <div class="control-group" style="margin-bottom: 0.25rem;">
+                            <div class="control-label" style="font-size: 0.7rem;">
+                                <span>Med-Alt Wind (4-8 km)</span>
+                                <span class="control-val" id="val-wind-med">8.0 m/s</span>
+                            </div>
+                            <input type="range" id="input-wind-med" min="-25" max="25" step="1" value="8" style="height: 4px;">
+                        </div>
+
+                        <!-- High: 8km+ -->
+                        <div class="control-group" style="margin-bottom: 0.25rem;">
+                            <div class="control-label" style="font-size: 0.7rem;">
+                                <span>High-Alt Wind (8+ km)</span>
+                                <span class="control-val" id="val-wind-high">15.0 m/s</span>
+                            </div>
+                            <input type="range" id="input-wind-high" min="-35" max="35" step="1" value="15" style="height: 4px;">
+                        </div>
+                        <div style="margin-top: 0.5rem; text-align: center;">
+                            <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 2px;">ALTITUDE WIND PROFILE</div>
+                            <canvas id="wind-profile-graph" width="200" height="40" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; background: rgba(0,0,0,0.2);"></canvas>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <span style="font-size: 0.85rem; font-weight: 500;">Enable PGK Canard Guidance</span>
+                        <input type="checkbox" id="toggle-pgk" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+
+                    <div class="control-group" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                        <div class="control-label" style="font-size: 0.75rem; font-weight: 700;">
+                            <span>Navigation Mode</span>
+                        </div>
+                        <select id="select-nav-mode" style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.25rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.25rem;">
+                            <option value="NORMAL">NORMAL (GNSS + INS)</option>
+                            <option value="DEGRADED">DEGRADED (High GNSS Noise)</option>
+                            <option value="DENIED">DENIED (INS Only)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" id="btn-program-fuze" style="margin-top: 0.5rem; width: 100%; border-color: var(--op-amber); color: var(--op-amber);">
+                        📡 PROGRAM FUZE
+                    </button>
+                    <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+                        <button class="btn btn-primary" id="btn-fire-sim" style="flex: 1;" disabled>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            FIRE 155MM SHELL
+                        </button>
+                        <button class="btn" id="btn-reset-sim">
+                            Reset
+                        </button>
+                        <button class="btn" id="btn-export-csv" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Export flight telemetry to CSV">
+                            📥 CSV
+                        </button>
+                    </div>
+                    <button class="btn" id="btn-comparison-fire" style="margin-top: 0.5rem; width: 100%; border-color: var(--tactical-orange); color: var(--tactical-orange); font-size: 0.72rem;">
+                        ⚡ DUAL FIRE: PGK vs UNGUIDED COMPARISON
+                    </button>
+
+                    <!-- EW Radar Threats Panel -->
+                    <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-steel);">
+                        <div style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--tactical-amber); margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                            <span>⚡ EW THREAT ENVIRONMENT</span>
+                            <span id="ew-status-chip" style="color: var(--tactical-red);">3 EMITTERS ACTIVE</span>
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span style="font-size: 0.72rem;">Radar Emitter 1 Range</span>
+                                <span class="control-val" id="val-ew1">8.0 km</span>
+                            </div>
+                            <input type="range" id="input-ew1" min="2" max="15" step="0.5" value="8">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span style="font-size: 0.72rem;">Emitter 2 Range</span>
+                                <span class="control-val" id="val-ew2">6.0 km</span>
+                            </div>
+                            <input type="range" id="input-ew2" min="2" max="15" step="0.5" value="6">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Panel: 2D/3D Live Trajectory Visualizer -->
+                <div class="panel-card" style="grid-column: span 1;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            Ballistic Flight Trajectory Visualizer
+                        </h2>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <div class="env-toggle-group">
+                                <button class="env-btn active" data-env="DAYLIGHT">DAYLIGHT</button>
+                                <button class="env-btn" data-env="FLIR">FLIR THERMAL</button>
+                                <button class="env-btn" data-env="DUSTSTORM">DESERT HAZE</button>
+                            </div>
+                            <button class="btn" id="btn-toggle-cesium" style="padding: 0.3rem 0.6rem; font-size: 0.7rem; border-color: #00e676; color: #00e676; background: rgba(0, 230, 118, 0.08);">
+                                🛰️ Pokhran Satellite Map
+                            </button>
+                            <div id="cesium-presets-group" style="display: none; gap: 0.25rem; align-items: center;">
+                                <button class="btn" id="btn-cesium-preset-ground" style="padding: 0.25rem 0.45rem; font-size: 0.65rem; border-color: var(--tactical-cyan); color: var(--tactical-cyan); background: rgba(0,229,255,0.08);">🎯 Ground View</button>
+                                <button class="btn" id="btn-cesium-preset-apex" style="padding: 0.25rem 0.45rem; font-size: 0.65rem; border-color: var(--text-dim); color: var(--text-dim);">🚀 Apex Arc</button>
+                                <button class="btn" id="btn-cesium-preset-target" style="padding: 0.25rem 0.45rem; font-size: 0.65rem; border-color: var(--tactical-red); color: var(--tactical-red);">💥 Target Bunker</button>
+                            </div>
+                            <button class="btn" id="btn-toggle-view-mode" style="padding: 0.3rem 0.6rem; font-size: 0.7rem; border-color: var(--tactical-cyan); color: var(--tactical-cyan);">
+                                Switch to 3D Path
+                            </button>
+                            <div class="hud-chip" style="padding: 0.3rem 0.5rem;">
+                                FPS: <span id="hud-fps">60</span>
+                            </div>
+                            <div class="hud-chip" id="ew-radar-chip" style="padding: 0.3rem 0.5rem; border-color: rgba(255,90,0,0.4); color: var(--tactical-orange);">
+                                EW: <span id="ew-radar-status">CLEAR</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="canvas-wrapper" id="visualizer-canvas-wrapper">
+                        <canvas id="canvas-trajectory" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;"></canvas>
+                        <div id="canvas-trajectory-3d" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; overflow: hidden;"></div>
+                        <div id="cesium-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index: 5;"></div>
+
+                        <!-- Tactical Cockpit Glass HUD Overlay (3D Flight Telemetry) -->
+                        <div class="hud-glass-layer" id="hud-glass-layer" style="display: none;">
+                            <div class="hud-tape-card hud-tape-left">
+                                <div class="hud-tape-title">VELOCITY</div>
+                                <div class="hud-tape-val" id="hud-mach-val">MACH 2.45</div>
+                                <div class="hud-tape-sub" id="hud-mps-val">834 m/s</div>
+                            </div>
+                            <div class="hud-tape-card hud-tape-right">
+                                <div class="hud-tape-title">ALTITUDE</div>
+                                <div class="hud-tape-val" id="hud-alt-val">12,450 m</div>
+                                <div class="hud-tape-sub" id="hud-g-val">GAX: 1.2 g</div>
+                            </div>
+                        </div>
+                        
+                        <div class="canvas-overlay-hud">
+                            <div class="hud-chip">MODE: <span id="hud-mode">PGK GUIDED CANARD</span></div>
+                            <div class="hud-chip">FLIGHT TIME: <span id="hud-time">0.00 s</span></div>
+                            <div class="hud-chip">CANARD PITCH: <span id="hud-canard-p">0.0°</span></div>
+                            <div class="hud-chip">CANARD YAW: <span id="hud-canard-y">0.0°</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Live Telemetry Bar -->
+                    <div class="telemetry-grid">
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">Downrange (X)</span>
+                            <span class="telemetry-value" id="telem-x">0.0 m</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">Altitude (Y)</span>
+                            <span class="telemetry-value" id="telem-y">0.0 m</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">Crossrange (Z)</span>
+                            <span class="telemetry-value" id="telem-z">0.0 m</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">Velocity / Mach</span>
+                            <span class="telemetry-value" id="telem-speed">827 m/s (M2.4)</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">Spin Rate (RPM)</span>
+                            <span class="telemetry-value" id="telem-spin">15,600 RPM</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">G-Load Impulse</span>
+                            <span class="telemetry-value" id="telem-g">1.0 g</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">INS Drift Error</span>
+                            <span class="telemetry-value" id="telem-ins">0.00 m</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="telemetry-label">Impact Accuracy</span>
+                            <span class="telemetry-value" style="color: var(--tactical-green);" id="telem-error">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Real-Time Telemetry Charts -->
+                    <div id="telemetry-charts-container" style="margin-top: 0.75rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <div>
+                            <div style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 2px;">ALTITUDE (m)</div>
+                            <canvas id="chart-altitude" style="width:100%; height: 60px; display: block; background: #040509; border: 1px solid var(--border-steel); border-radius: 4px;"></canvas>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 2px;">VELOCITY (m/s)</div>
+                            <canvas id="chart-velocity" style="width:100%; height: 60px; display: block; background: #040509; border: 1px solid var(--border-steel); border-radius: 4px;"></canvas>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 2px;">G-FORCE</div>
+                            <canvas id="chart-gforce" style="width:100%; height: 60px; display: block; background: #040509; border: 1px solid var(--border-steel); border-radius: 4px;"></canvas>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.65rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 2px;">CANARD DEFLECTION (°)</div>
+                            <canvas id="chart-canard" style="width:100%; height: 60px; display: block; background: #040509; border: 1px solid var(--border-steel); border-radius: 4px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Telemetry Terminal Log & Satellite lock map -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            Live Command Console
+                        </h2>
+                    </div>
+                    
+                    <!-- Monospace Scrolling Terminal Output -->
+                    <div id="terminal-console-log" style="height: 220px; background: #040509; border: 1px solid var(--border-steel); border-radius: var(--radius-sharp); padding: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; overflow-y: auto; color: var(--tactical-green); display: flex; flex-direction: column; gap: 0.35rem;">
+                        <div style="color: var(--text-dim);">[SYSTEM] Ready for ignition...</div>
+                    </div>
+
+                    <!-- Satellite Lock Status UI -->
+                    <div class="panel-header" style="margin-top: 0.5rem; padding-bottom: 0.25rem;">
+                        <h2 class="panel-title" style="font-size: 0.75rem;">GNSS Signal Lock (NavIC/GPS)</h2>
+                    </div>
+
+                    <div style="background: #040509; border: 1px solid var(--border-steel); border-radius: var(--radius-sharp); padding: 0.5rem; font-family: var(--font-mono); font-size: 0.7rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>IRNSS-1A (NavIC)</span>
+                            <span style="color: var(--tactical-green);">45 dB-Hz [L5]</span>
+                        </div>
+                        <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.05);">
+                            <div style="width: 85%; height: 100%; background: var(--tactical-green);"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>IRNSS-1B (NavIC)</span>
+                            <span style="color: var(--tactical-green);">42 dB-Hz [L5]</span>
+                        </div>
+                        <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.05);">
+                            <div style="width: 78%; height: 100%; background: var(--tactical-green);"></div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>GPS-G12 (NAVSTAR)</span>
+                            <span style="color: var(--tactical-cyan);">38 dB-Hz [L1]</span>
+                        </div>
+                        <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.05);">
+                            <div style="width: 68%; height: 100%; background: var(--tactical-cyan);"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: MULTI-MODE ELECTRONIC FUZE CONSOLE -->
+        <div id="tab-fuze" class="tab-content">
+            <div class="dashboard-grid">
+                
+                <!-- Left Panel: Mode Selector -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            Electronic Fuze Mode Selection
+                        </h2>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button class="btn fuze-mode-select active" data-mode="PROXIMITY" style="text-align: left; justify-content: flex-start; padding: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; color: var(--accent-cyan);">1. PROXIMITY AIRBURST (HoB)</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">Detonates at set height above ground using FMCW radar sensor for personnel/light vehicle neutralisation.</div>
+                            </div>
+                        </button>
+
+                        <button class="btn fuze-mode-select" data-mode="IMPACT" style="text-align: left; justify-content: flex-start; padding: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; color: var(--accent-emerald);">2. POINT DETONATION (PD)</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">Instantaneous impact detonation triggered by piezoelectric sensor upon surface strike.</div>
+                            </div>
+                        </button>
+
+                        <button class="btn fuze-mode-select" data-mode="DELAY" style="text-align: left; justify-content: flex-start; padding: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; color: var(--accent-amber);">3. DELAY DETONATION (PENETRATION)</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">Programmable 10–50ms delay post-impact to breach hardened bunkers and concrete shelters.</div>
+                            </div>
+                        </button>
+
+                        <button class="btn fuze-mode-select" data-mode="TIME" style="text-align: left; justify-content: flex-start; padding: 1rem;">
+                            <div>
+                                <div style="font-weight: 700; color: var(--accent-cyan);">4. TIME (PRE-PROGRAMMED AIRBURST)</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem;">Detonates at an exact pre-programmed flight time, independent of altitude or impact. Used when GNSS/Radar is jammed.</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="control-group" id="fuze-prox-group" style="margin-top: 1rem;">
+                        <div class="control-label">
+                            <span>Height of Burst (HoB Radar Setting)</span>
+                            <span class="control-val" id="val-hob">12.0 m</span>
+                        </div>
+                        <input type="range" id="input-hob" min="4" max="25" step="1" value="12">
+                    </div>
+
+                    <div class="control-group" id="fuze-delay-group" style="margin-top: 1rem; display: none;">
+                        <div class="control-label">
+                            <span>Penetration Delay Timer</span>
+                            <span class="control-val" id="val-delay">25 ms</span>
+                        </div>
+                        <input type="range" id="input-delay" min="5" max="50" step="5" value="25">
+                    </div>
+
+                    <div class="control-group" id="fuze-time-group" style="margin-top: 1rem; display: none;">
+                        <div class="control-label">
+                            <span>Programmed Flight Time (Time Mode)</span>
+                            <span class="control-val" id="val-time">60.0 s</span>
+                        </div>
+                        <input type="range" id="input-time" min="10" max="100" step="0.5" value="60">
+                    </div>
+
+                    <button class="btn btn-danger" id="btn-test-detonation" style="margin-top: 1rem;">
+                        SIMULATE DETONATION PULSE
+                    </button>
+                </div>
+
+                <!-- Right Panel: ESAD Safety & Arming Logic Flowchart & Waveform -->
+                <div class="panel-card" style="grid-column: span 2;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            Electronic Safety & Arming Device (ESAD) Dual-Environment Interlocks
+                        </h2>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="background: rgba(8,11,17,0.6); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                            <h3 style="font-size: 0.9rem; color: var(--accent-cyan); margin-bottom: 0.75rem;">ESAD Arming Sequence Logic</h3>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.8rem; font-family: var(--font-mono);">
+                                <div id="esad-step-1" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    🛡️ [SAFE] System Inert
+                                </div>
+                                <div id="esad-step-2" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [SELF TEST] PENDING
+                                </div>
+                                <div id="esad-step-3" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [LAUNCH EVENT DETECTED] PENDING
+                                </div>
+                                <div id="esad-step-4" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [SPIN CONFIRMATION] PENDING
+                                </div>
+                                <div id="esad-step-5" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [FLIGHT CONFIRMATION] PENDING
+                                </div>
+                                <div id="esad-step-6" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [SIMULATION-ARMED] PENDING
+                                </div>
+                                <div id="esad-step-7" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [EVENT DETECTION] PENDING
+                                </div>
+                                <div id="esad-step-8" style="padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary);">
+                                    ⏳ [EVENT LOGGED] PENDING
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Waveform for Sensor Peak Shock/FMCW Radar -->
+                        <div style="background: rgba(8,11,17,0.6); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
+                            <h3 style="font-size: 0.9rem; color: var(--accent-cyan);" id="fuze-wave-title">MEMS Accelerometer Shock Pulse (18,450g Peak)</h3>
+                            <canvas id="canvas-fuze-wave" style="height: 180px; width: 100%; border: 1px solid var(--border-color); border-radius: 4px;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--tactical-orange); background: rgba(255,160,0,0.1); border-radius: 0 4px 4px 0;">
+                        <h3 style="color: var(--tactical-orange); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Design Rationale: Thermal Reserve Battery vs Ram-Air Turbine
+                        </h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            The Aegis-155 utilizes a <strong>Thermal Reserve Battery Pack</strong> instead of a traditional Ram-Air Turbine (RAT). At setback forces exceeding 15,000g, rotating mechanical components in a RAT are highly susceptible to bearing shear and structural failure. A thermal battery remains completely inert until firing, providing a 20+ year shelf life, zero moving parts, and guaranteed activation under extreme gun-launch shock via pyrotechnic squib.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: EXPLODED HARDWARE ARCHITECTURE & INTERACTIVE 3D MODEL -->
+        <div id="tab-hardware" class="tab-content">
+            <div class="doc-section" style="margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <h2>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.6 15.11a2 2 0 01-1.077-1.077l-.48-2.387a6 6 0 01.517-3.86l.158-.318a6 6 0 00.517-3.86L3.847 4.195a2 2 0 01.547-1.022l1.9-1.9a2 2 0 011.022-.547l2.387.477a6 6 0 003.86-.517l.318-.158a6 6 0 013.86-.517l2.387.477a2 2 0 011.077 1.077l.48 2.387a6 6 0 01-.517 3.86l-.158.318a6 6 0 00-.517 3.86l.477 2.387a2 2 0 01-.547 1.022l-1.9 1.9z"/></svg>
+                        Interactive 3D Model & 155mm PGK Assembly Inspector
+                    </h2>
+                    <span style="font-size: 0.65rem; background: var(--op-cyan); color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: bold;">✅ COMPATIBLE WITH NATO STANAG 155MM FUZE-WELL</span>
+                </div>
+                <p>Drag to rotate in 3D, scroll to zoom. Use the interactive controls to explode the PGK nose assembly, inspect internal MEMS IMU/Radar electronics, and test real-time 2-axis canard fin deflections.</p>
+            </div>
+
+            <!-- 3D Interactive Viewport Container -->
+            <div class="panel-card" style="margin-bottom: 1.25rem;">
+                <div class="panel-header">
+                    <h3 class="panel-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        3D WebGL 155mm PGK Artillery Shell Viewport
+                    </h3>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn" id="btn-3d-explode" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                            💥 Explode Assembly
+                        </button>
+                        <button class="btn" id="btn-3d-wireframe" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                            🌐 X-Ray / Wireframe
+                        </button>
+                        <button class="btn" id="btn-3d-autorotate" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                            🔄 Auto Rotate
+                        </button>
+                        <button class="btn" id="btn-3d-reset" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">
+                            🎯 Reset View
+                        </button>
+                    </div>
+                </div>
+
+                <div class="component-selector-group" style="padding: 0.5rem 1rem 0 1rem; border-bottom: 1px solid var(--border-steel);">
+                    <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-dim); display: flex; align-items: center; margin-right: 0.5rem;">FOCUS SUB-ASSEMBLY:</span>
+                    <button class="component-pill-btn active" data-part="ALL">ALL SYSTEMS</button>
+                    <button class="component-pill-btn" data-part="RADOME">FMCW RADOME</button>
+                    <button class="component-pill-btn" data-part="CANARDS">CANARD SERVOS</button>
+                    <button class="component-pill-btn" data-part="GNSS">ANTI-JAM GNSS/IMU</button>
+                    <button class="component-pill-btn" data-part="BATTERY">THERMAL BATTERY</button>
+                    <button class="component-pill-btn" data-part="COLLAR">DESPUN BEARING</button>
+                </div>
+
+                <div class="canvas-wrapper" style="height: 480px; position: relative;">
+                    <div id="canvas-3d-container" style="width: 100%; height: 100%;"></div>
+                    <div class="canvas-overlay-hud" style="top: 1rem; left: 1rem;">
+                        <div class="hud-chip">3D MODEL: <span>155MM NATO/ATAGS PGK</span></div>
+                        <div class="hud-chip">CANARD ANGLE: <span id="hud-3d-canard-angle">0.0°</span></div>
+                        <div class="hud-chip">ASSEMBLY MODE: <span id="hud-3d-mode">ASSEMBLED</span></div>
+                    </div>
+                </div>
+
+                <!-- Live 3D Canard Deflection Test Sliders -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem;">
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Test 3D Canard Pitch Deflection ($\delta_p$)</span>
+                            <span class="control-val" id="val-3d-pitch">0.0°</span>
+                        </div>
+                        <input type="range" id="input-3d-pitch" min="-15" max="15" step="0.5" value="0">
+                    </div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Test 3D Canard Yaw Deflection ($\delta_y$)</span>
+                            <span class="control-val" id="val-3d-yaw">0.0°</span>
+                        </div>
+                        <input type="range" id="input-3d-yaw" min="-15" max="15" step="0.5" value="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="hardware-grid" style="margin-bottom: 1.25rem;">
+                
+                <!-- Electronics Architecture -->
+                <div class="panel-card">
+                    <div class="panel-header"><h3 class="panel-title">Embedded Electronics Architecture</h3></div>
+                    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 4px; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <div style="flex: 1; border: 1px solid var(--accent-cyan); padding: 0.5rem; text-align: center; border-radius: 4px;">📡 SAASM GNSS</div>
+                            <div style="flex: 1; border: 1px solid var(--accent-cyan); padding: 0.5rem; text-align: center; border-radius: 4px;">🧭 MEMS IMU</div>
+                            <div style="flex: 1; border: 1px solid var(--accent-emerald); padding: 0.5rem; text-align: center; border-radius: 4px;">🎯 FMCW Radar</div>
+                        </div>
+                        <div style="display: flex; justify-content: center; color: var(--text-dim);">▼ Data Bus (SPI / I2C) ▼</div>
+                        <div style="border: 2px solid var(--tactical-orange); padding: 1rem; text-align: center; border-radius: 4px; font-weight: bold;">🧠 Flight Control MCU (MIL-SPEC ARM Cortex-M7)</div>
+                        <div style="display: flex; justify-content: center; color: var(--text-dim);">▼ PWM Control ▼</div>
+                        <div style="display: flex; gap: 1rem; justify-content: center;">
+                            <div style="flex: 1; border: 1px solid var(--accent-amber); padding: 0.5rem; text-align: center; border-radius: 4px;">⚙️ Pitch Canard Servo</div>
+                            <div style="flex: 1; border: 1px solid var(--accent-amber); padding: 0.5rem; text-align: center; border-radius: 4px;">⚙️ Yaw Canard Servo</div>
+                        </div>
+                        <div style="display: flex; justify-content: center; margin-top: 0.5rem;">
+                            <div style="border: 1px dashed var(--tactical-red); padding: 0.5rem 2rem; text-align: center; border-radius: 4px; color: var(--tactical-red);">🔋 Thermal Reserve Battery (1200V HV Capacitor)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SWaP-C & Power Summary -->
+                <div class="panel-card" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div>
+                        <div class="panel-header" style="margin-bottom: 0.5rem;"><h3 class="panel-title">SWaP-C & Cost Summary</h3></div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            <span style="color: var(--op-cyan); font-weight: bold;">Target Unit Cost:</span> < $10,000 USD<br>
+                            <span style="color: var(--op-cyan); font-weight: bold;">Design Argument:</span> Uses fixed 2-axis mechanism + COTS-derived production sensors for mass manufacturability.<br>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="panel-header" style="margin-bottom: 0.5rem;"><h3 class="panel-title">Power & Environmental Protection</h3></div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            <span style="color: var(--op-cyan); font-weight: bold;">Power Source:</span> Shock-activated <b>Thermal Reserve Battery</b>. Simple, inert prior to launch, resilient to 18,000g setback.<br>
+                            <span style="color: var(--op-cyan); font-weight: bold;">Protection:</span> Hard-potted electronics with MIL-STD conformal coating.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hardware-grid">
+                
+                <!-- Schematic Canvas/Diagram view -->
+                <div class="interactive-schematic">
+                    <svg width="100%" height="100%" viewBox="0 0 600 380" style="position: absolute; top:0; left:0;">
+                        <!-- Outer Shell Contour -->
+                        <path d="M 120 190 Q 220 120 480 120 L 480 260 Q 220 260 120 190 Z" fill="none" stroke="rgba(6, 182, 212, 0.4)" stroke-width="2" stroke-dasharray="4 4"/>
+                        <!-- Canard Fins -->
+                        <polygon points="170,110 210,50 230,120" fill="rgba(245, 158, 11, 0.4)" stroke="var(--accent-amber)" stroke-width="2"/>
+                        <polygon points="170,270 210,330 230,260" fill="rgba(245, 158, 11, 0.4)" stroke="var(--accent-amber)" stroke-width="2"/>
+                        <!-- Connecting Lines -->
+                        <line x1="160" y1="190" x2="450" y2="190" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+                    </svg>
+
+                    <!-- Interactive Nodes -->
+                    <div class="component-node active" style="left: 20%; top: 46%;" data-node="1">1</div>
+                    <div class="component-node" style="left: 32%; top: 22%;" data-node="2">2</div>
+                    <div class="component-node" style="left: 45%; top: 46%;" data-node="3">3</div>
+                    <div class="component-node" style="left: 60%; top: 46%;" data-node="4">4</div>
+                    <div class="component-node" style="left: 76%; top: 46%;" data-node="5">5</div>
+                </div>
+
+                <!-- Technical Details Display Card -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3 class="panel-title" id="node-title">Node 1: FMCW Proximity Radar & Antenna Assembly</h3>
+                    </div>
+                    <div id="node-description" style="color: var(--text-secondary); font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                        <p>Nose-mounted K-band FMCW radar sensor operating at 24.15 GHz. Provides millimetric altitude resolution down to 10cm for precise airburst proximity detonation above target terrain.</p>
+                        <div class="formula-card">
+                            Shock Rating: 20,000 g axial shock<br>
+                            Operational Frequency: 24.0 GHz - 24.25 GHz FMCW<br>
+                            Range: 0 - 5,000m
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 4: MONTE CARLO CEP ANALYSIS -->
+        <div id="tab-cep" class="tab-content">
+            
+            <!-- CEP Mode Selector -->
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--border-steel); border-radius: var(--radius-md);">
+                <label for="cep-mode-select" style="color: var(--accent-cyan); font-weight: 600;">Analysis Mode:</label>
+                <select id="cep-mode-select" style="max-width: 350px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.5rem; border-radius: 4px; font-family: var(--font-primary);">
+                    <option value="mode-mc">Monte Carlo Dispersion Test</option>
+                    <option value="mode-eb">Error Budget & Sensitivity</option>
+                    <option value="mode-sweep">Parameter Sweep</option>
+                </select>
+                <span style="color: var(--text-dim); font-size: 0.85rem; margin-left: auto;">Select an analysis module to reduce layout density</span>
+            </div>
+
+            <!-- MONTE CARLO VIEW -->
+            <div id="cep-view-mc" class="cep-view-section">
+            <div class="dashboard-grid">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Monte Carlo Dispersion Test
+                        </h2>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        Simulate 
+                        <select id="monte-carlo-count" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.2rem 0.5rem; border-radius: 4px; font-family: var(--font-mono);">
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                            <option value="1000">1000</option>
+                        </select>
+                        artillery rounds fired under stochastic uncertainties (Wind Noise, Muzzle Velocity Error, Launch Angle Error, and GNSS Noise) to calculate the Circular Error Probable (CEP).
+                    </p>
+
+                    <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-steel); border-radius: 4px; padding: 1rem; margin-top: 1rem;">
+                        <h3 style="font-size: 0.8rem; color: var(--accent-cyan); margin-bottom: 0.75rem;">Stochastic Uncertainty Configuration</h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="control-group">
+                                <div class="control-label">
+                                    <span>Wind Noise ($\sigma_W$)</span>
+                                    <span class="control-val" id="val-unc-wind">1.5 m/s</span>
+                                </div>
+                                <input type="range" id="input-unc-wind" min="0" max="5" step="0.1" value="1.5">
+                            </div>
+                            
+                            <div class="control-group">
+                                <div class="control-label">
+                                    <span>Muzzle Vel Error ($\sigma_{MV}$)</span>
+                                    <span class="control-val" id="val-unc-mv">2.0 m/s</span>
+                                </div>
+                                <input type="range" id="input-unc-mv" min="0" max="10" step="0.1" value="2.0">
+                            </div>
+                            
+                            <div class="control-group">
+                                <div class="control-label">
+                                    <span>Launch Angle Error ($\sigma_\theta$)</span>
+                                    <span class="control-val" id="val-unc-angle">0.1°</span>
+                                </div>
+                                <input type="range" id="input-unc-angle" min="0" max="1" step="0.05" value="0.1">
+                            </div>
+                            
+                            <div class="control-group">
+                                <div class="control-label">
+                                    <span>GNSS Noise ($\sigma_{GNSS}$)</span>
+                                    <span class="control-val" id="val-unc-gnss">4.0 m</span>
+                                </div>
+                                <input type="range" id="input-unc-gnss" min="0" max="15" step="0.5" value="4.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button class="btn btn-primary" id="btn-run-montecarlo" style="flex: 2;">
+                            RUN MONTE CARLO TEST
+                        </button>
+                        <button class="btn" id="btn-replay-montecarlo" style="flex: 1; border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Run again with the exact same seed">
+                            🔄 REPLAY RUN
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="flex: 1; background: rgba(239,68,68,0.1); border: 1px solid var(--accent-crimson); padding: 0.75rem; border-radius: var(--radius-md);">
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">UNGUIDED CEP50</div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-crimson);" id="cep-val-unguided">-- m</div>
+                            </div>
+                            <div style="flex: 1; background: rgba(239,68,68,0.1); border: 1px solid var(--accent-crimson); padding: 0.75rem; border-radius: var(--radius-md);">
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">UNGUIDED CEP90</div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-crimson);" id="cep-val-unguided-90">-- m</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="flex: 1; background: rgba(16,185,129,0.1); border: 1px solid var(--accent-emerald); padding: 0.75rem; border-radius: var(--radius-md); position: relative;">
+                                <div id="badge-simulated-50" style="display: none; position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.6rem; background: var(--accent-emerald); color: #000; padding: 0.1rem 0.3rem; border-radius: 2px; font-weight: bold;">SIMULATED RESULT</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">PGK GUIDED CEP50 <span style="color:var(--accent-cyan); margin-left:4px;">(Target &le; 30m)</span></div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-emerald);" id="cep-val-guided">-- m</div>
+                            </div>
+                            <div style="flex: 1; background: rgba(16,185,129,0.1); border: 1px solid var(--accent-emerald); padding: 0.75rem; border-radius: var(--radius-md); position: relative;">
+                                <div id="badge-simulated-90" style="display: none; position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.6rem; background: var(--accent-emerald); color: #000; padding: 0.1rem 0.3rem; border-radius: 2px; font-weight: bold;">SIMULATED RESULT</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">PGK GUIDED CEP90</div>
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-emerald);" id="cep-val-guided-90">-- m</div>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-steel); padding: 0.75rem; border-radius: var(--radius-md);">
+                            <div style="font-size: 0.75rem; color: var(--accent-cyan); margin-bottom: 0.5rem; letter-spacing: 0.05em; font-weight: bold; display: flex; align-items: center; gap: 0.25rem;">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                DATA PROVENANCE
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.7rem; font-family: var(--font-mono); color: var(--text-secondary);">
+                                <div><span style="color: var(--text-dim);">SOURCE:</span> <span id="prov-source" style="color: var(--accent-emerald);">SIMULATOR (3D Point-Mass)</span></div>
+                                <div><span style="color: var(--text-dim);">STATUS:</span> <span id="prov-status" style="color: var(--accent-emerald);">SIMULATED</span></div>
+                                <div><span style="color: var(--text-dim);">MODEL VER:</span> <span id="cep-model-version">--</span></div>
+                                <div><span style="color: var(--text-dim);">CONFIG VER:</span> <span id="cep-config-version">--</span></div>
+                                <div><span style="color: var(--text-dim);">RUN ID:</span> <span id="cep-run-id" style="font-size: 0.6rem;">--</span></div>
+                                <div><span style="color: var(--text-dim);">TIMESTAMP:</span> <span id="prov-timestamp">--</span></div>
+                            </div>
+                            <div style="margin-top: 0.75rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.75rem; display: flex; justify-content: space-between; font-size: 0.85rem; font-family: var(--font-mono);">
+                                <div><span style="color: var(--text-dim);">Mean:</span> <span id="cep-mean" style="color: var(--text-primary); font-weight: 700;">--</span></div>
+                                <div><span style="color: var(--text-dim);">Std Dev:</span> <span id="cep-stddev" style="color: var(--text-primary); font-weight: 700;">--</span></div>
+                                <div><span style="color: var(--text-dim);">Max Error:</span> <span id="cep-max" style="color: var(--text-primary); font-weight: 700;">--</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card" style="grid-column: span 2;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            Target Grid Dispersion Map (24.0 km Target Zone)
+                        </h2>
+                    </div>
+
+                    <div class="canvas-wrapper" style="height: 420px;">
+                        <canvas id="canvas-cep-heatmap"></canvas>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End cep-view-mc -->
+
+            <!-- ERROR BUDGET VIEW -->
+            <div id="cep-view-eb" class="cep-view-section" style="display: none;">
+            <!-- Error Budget & Sensitivity -->
+            <div class="dashboard-grid" style="margin-top: 1.25rem;">
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                            CEP Error Budget & Sensitivity Analysis
+                        </h2>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+                        Isolates individual sources of stochastic noise to determine their independent contribution to the final Circular Error Probable (CEP).
+                    </p>
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                        <button class="btn" id="btn-run-sensitivity" style="border-color: var(--accent-emerald); color: var(--accent-emerald);">
+                            RUN SENSITIVITY ANALYSIS
+                        </button>
+                        <span id="sensitivity-status" style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.85rem;"></span>
+                    </div>
+                    <div id="sensitivity-results" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--border-steel); border-radius: var(--radius-md);">
+                        <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-steel); color: var(--text-dim);">
+                                <th style="text-align: left; padding: 0.5rem;">Error Source</th>
+                                <th style="text-align: right; padding: 0.5rem;">Isolated CEP50</th>
+                                <th style="text-align: left; padding: 0.5rem; width: 60%; padding-left: 2rem;">Sensitivity Impact</th>
+                            </tr>
+                            <tbody id="sensitivity-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End cep-view-eb -->
+
+            <!-- PARAMETER SWEEP VIEW -->
+            <div id="cep-view-sweep" class="cep-view-section" style="display: none;">
+            <!-- Parameter Sweep -->
+            <div class="dashboard-grid" style="margin-top: 1.25rem;">
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+                            Parameter Sweep (Sensitivity Analysis)
+                        </h2>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+                        Run the simulation across a range of values for a specific parameter to understand its non-linear impact on CEP.
+                    </p>
+                    
+                    <div style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1rem; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--border-steel); border-radius: var(--radius-md);">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Parameter</label>
+                            <select id="sweep-parameter" style="background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.5rem; border-radius: 4px; font-family: var(--font-primary); width: 100%;">
+                                <option value="uncGnss">GNSS Noise (m)</option>
+                                <option value="uncWind">Wind Uncertainty (m/s)</option>
+                                <option value="uncAngle">Launch Angle Error (deg)</option>
+                                <option value="uncSensor">Sensor Noise (m)</option>
+                                <option value="uncActuator">Actuator Deviation (deg)</option>
+                                <option value="uncTiming">Timing Jitter (ms)</option>
+                                <option value="muzzleVelocity">Muzzle Velocity (m/s)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 2;">
+                            <label>Values to Test (comma-separated)</label>
+                            <input type="text" id="sweep-values" value="0, 5, 10, 15, 20" />
+                        </div>
+                        <div class="form-group">
+                            <button class="btn" id="btn-run-sweep" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                                RUN SWEEP
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <span id="sweep-status" style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 1rem; display: block;"></span>
+                    
+                    <div id="sweep-results" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--border-steel); border-radius: var(--radius-md);">
+                        <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-secondary);">
+                            <tr style="border-bottom: 1px solid var(--border-steel); color: var(--text-dim);">
+                                <th style="text-align: left; padding: 0.5rem;">Parameter Value</th>
+                                <th style="text-align: right; padding: 0.5rem;">CEP50</th>
+                                <th style="text-align: left; padding: 0.5rem; width: 60%; padding-left: 2rem;">Trend</th>
+                            </tr>
+                            <tbody id="sweep-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- End cep-view-sweep -->
+
+        </div>
+
+        <!-- TAB: HARDWARE TELEMETRY -->
+        <div id="tab-telemetry" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="panel-card" style="grid-column: span 1;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Serial Connection</h2>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button id="btn-connect-ws" class="btn">Connect Dashboard</button>
+                        <button id="btn-disconnect-ws" class="btn" style="border-color: var(--accent-orange); color: var(--accent-orange); display: none;">Disconnect</button>
+                    </div>
+                    <div id="ws-status" style="margin-top: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">Status: Disconnected</div>
+                </div>
+                
+                <div class="panel-card" style="grid-column: span 2;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Live Sensor Stream</h2>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; height: 100%;">
+                        <div style="flex: 1; background: #040509; border: 1px solid var(--border-steel); padding: 1rem; font-family: var(--font-mono); font-size: 0.85rem; color: #00ff66; white-space: pre-wrap; overflow-y: auto; max-height: 300px;" id="telemetry-log">Waiting for data...</div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--tactical-orange); background: rgba(255,160,0,0.1); border-radius: 0 4px 4px 0;">
+                        <h3 style="color: var(--tactical-orange); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Design Rationale: Thermal Reserve Battery vs Ram-Air Turbine
+                        </h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            The Aegis-155 utilizes a <strong>Thermal Reserve Battery Pack</strong> instead of a traditional Ram-Air Turbine (RAT). At setback forces exceeding 15,000g, rotating mechanical components in a RAT are highly susceptible to bearing shear and structural failure. A thermal battery remains completely inert until firing, providing a 20+ year shelf life, zero moving parts, and guaranteed activation under extreme gun-launch shock via pyrotechnic squib.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: REQUIREMENTS CENTER -->
+        <div id="tab-requirements" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display:flex;align-items:center;gap:1rem;">
+                            <h2 class="panel-title">Requirements Traceability Matrix (RTM)</h2>
+                            <span id="req-count-badge" style="font-size:0.7rem;color:var(--text-dim);font-family:var(--font-mono);border:1px solid var(--border-steel);padding:0.1rem 0.5rem;border-radius:4px;">loading...</span>
+                        </div>
+                        <button id="btn-reset-engineering" class="btn" style="border-color: var(--accent-orange); color: var(--accent-orange); font-size: 0.7rem; padding: 0.25rem 0.5rem;">Reset defaults</button>
+                    </div>
+                    <div style="margin-top: 1rem; overflow-x: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                    <th style="padding: 0.75rem;">ID</th>
+                                    <th style="padding: 0.75rem;">Requirement</th>
+                                    <th style="padding: 0.75rem;">Threshold</th>
+                                    <th style="padding: 0.75rem;">Verif. Method</th>
+                                    <th style="padding: 0.75rem;">Status</th>
+                                    <th style="padding: 0.75rem;">Evidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requirements-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--tactical-orange); background: rgba(255,160,0,0.1); border-radius: 0 4px 4px 0;">
+                        <h3 style="color: var(--tactical-orange); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Design Rationale: Thermal Reserve Battery vs Ram-Air Turbine
+                        </h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            The Aegis-155 utilizes a <strong>Thermal Reserve Battery Pack</strong> instead of a traditional Ram-Air Turbine (RAT). At setback forces exceeding 15,000g, rotating mechanical components in a RAT are highly susceptible to bearing shear and structural failure. A thermal battery remains completely inert until firing, providing a 20+ year shelf life, zero moving parts, and guaranteed activation under extreme gun-launch shock via pyrotechnic squib.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- TAB: BOM & SWaP-C -->
+        <div id="tab-bom" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">PRELIMINARY CONCEPT BOM</h2>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; margin-bottom: 1rem;">
+                        <div style="background: rgba(0,229,255,0.1); border: 1px solid var(--accent-cyan); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">TOTAL MASS</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);" id="bom-total-mass">-- kg</div>
+                        </div>
+                        <div style="background: rgba(0,229,255,0.1); border: 1px solid var(--accent-cyan); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">AVG / PEAK POWER</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);" id="bom-total-power">-- mW / -- mW</div>
+                        </div>
+                        <div style="background: rgba(0,229,255,0.1); border: 1px solid var(--accent-cyan); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">ESTIMATED COST</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);" id="bom-total-cost">$--</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-steel); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">COST BY SUBSYSTEM</div>
+                            <div style="font-size: 0.85rem; font-weight: 400; color: var(--text-primary); margin-top: 0.5rem;" id="bom-cost-breakdown">--</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-steel); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">MASS BY SUBSYSTEM</div>
+                            <div style="font-size: 0.85rem; font-weight: 400; color: var(--text-primary); margin-top: 0.5rem;" id="bom-mass-breakdown">--</div>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Component</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Category</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Rep. Part</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Supplier</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Qty</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Unit Cost</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Mass (g)</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Power (Avg/Peak)</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Source</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Conf.</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Alternative</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bom-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--tactical-orange); background: rgba(255,160,0,0.1); border-radius: 0 4px 4px 0;">
+                        <h3 style="color: var(--tactical-orange); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            Design Rationale: Thermal Reserve Battery vs Ram-Air Turbine
+                        </h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            The Aegis-155 utilizes a <strong>Thermal Reserve Battery Pack</strong> instead of a traditional Ram-Air Turbine (RAT). At setback forces exceeding 15,000g, rotating mechanical components in a RAT are highly susceptible to bearing shear and structural failure. A thermal battery remains completely inert until firing, providing a 20+ year shelf life, zero moving parts, and guaranteed activation under extreme gun-launch shock via pyrotechnic squib.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- POWER BUDGET PANEL -->
+                <div class="panel-card" style="grid-column: span 3; margin-top: 1rem;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">SYSTEM POWER BUDGET</h2>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem; margin-bottom: 1rem;">
+                        <div style="background: rgba(16,185,129,0.1); border: 1px solid var(--accent-emerald); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">TOTAL ENERGY REQ (J)</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-emerald);" id="pb-total-energy">-- J</div>
+                        </div>
+                        <div style="background: rgba(16,185,129,0.1); border: 1px solid var(--accent-emerald); padding: 1rem; border-radius: var(--radius-md); flex: 1;">
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">BATTERY REQUIREMENT (+20% MARGIN)</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-emerald);" id="pb-total-battery">-- J</div>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-emerald);">
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Subsystem</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Nominal Pwr (mW)</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Peak Pwr (mW)</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Duty Cycle</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Consumed (J)</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">DC/DC Eff.</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Gross Energy (J)</th>
+                                    <th style="padding: 0.75rem; white-space: nowrap;">Validation Source</th>
+                                </tr>
+                            </thead>
+                            <tbody id="power-budget-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--accent-crimson); background: rgba(239,68,68,0.1); border-radius: 0 4px 4px 0;">
+                        <h3 style="color: var(--accent-crimson); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            Notice: Unverified Theoretical Budget
+                        </h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            Power validation is theoretical and must not be claimed until physically measured. Duty cycles and efficiencies are estimates based on standard aerospace margins for a 60-second flight envelope.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- TAB: SYSTEM VERSION -->
+        <div id="tab-version" class="tab-content">
+            <div class="dashboard-grid">
+                <!-- System Version Matrix -->
+                <div class="panel-card" style="grid-column: span 1;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">SYSTEM VERSION MATRIX</h2>
+                    </div>
+                    <div style="margin-top: 1rem;" id="version-matrix-container">
+                        <!-- Populated by JS -->
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">Loading version data...</div>
+                    </div>
+                </div>
+
+                <!-- Simulation Reproducibility History -->
+                <div class="panel-card" style="grid-column: span 2;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">SIMULATION HISTORY & REPRODUCIBILITY</h2>
+                        <button class="action-btn primary" onclick="fetchSimulationHistory()">Refresh</button>
+                    </div>
+                    <div style="overflow-x: auto; margin-top: 1rem;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                    <th style="padding: 0.75rem;">Time</th>
+                                    <th style="padding: 0.75rem;">Status</th>
+                                    <th style="padding: 0.75rem;">Random Seed</th>
+                                    <th style="padding: 0.75rem;">Physics</th>
+                                    <th style="padding: 0.75rem;">Config Hash</th>
+                                    <th style="padding: 0.75rem;">Result Hash</th>
+                                    <th style="padding: 0.75rem;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sim-history-table-body">
+                                <!-- Populated by JS -->
+                                <tr><td colspan="7" style="padding: 1rem; text-align: center; color: var(--text-secondary);">No history available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--accent-cyan); background: rgba(0,229,255,0.1); border-radius: 0 4px 4px 0;">
+                        <h3 style="color: var(--accent-cyan); font-size: 0.9rem; margin-bottom: 0.5rem;">Mathematical Reproducibility Guarantee</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+                            Every simulation run is cryptographically sealed. Re-running a simulation with the identical <code>Random Seed</code> and <code>Config Hash</code> on the same <code>Physics Version</code> is guaranteed to produce an identical <code>Result Hash</code>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: ASSUMPTIONS -->
+        <div id="tab-assumptions" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Model Assumptions & Limitations</h2>
+                    </div>
+                    <div style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                        <h3 style="color: var(--accent-cyan); margin-bottom: 0.5rem;">What the simulator proves</h3>
+                        <ul style="margin-bottom: 1rem; padding-left: 1.5rem;">
+                            <li>The mathematical viability of a 2-axis canard system to reduce trajectory dispersion.</li>
+                            <li>The statistical impact of environmental and systemic uncertainties on overall CEP.</li>
+                            <li>The theoretical reduction in CEP compared to an unguided 155mm shell.</li>
+                        </ul>
+                        
+                        <h3 style="color: var(--accent-orange); margin-bottom: 0.5rem;">What the simulator does NOT prove</h3>
+                        <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem;">
+                            <li>High-G survivability of the physical electronic components (Requires sled track/gun-launch testing).</li>
+                            <li>Actual real-world RF performance of the FMCW radar under high spin rates.</li>
+                            <li>Final operational validation of the Aegis-155 system.</li>
+                        </ul>
+
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; border: 1px solid var(--border-steel);">
+                            <thead>
+                                <tr style="background: rgba(0, 229, 255, 0.1); color: var(--accent-cyan); text-align: left; border-bottom: 1px solid var(--border-steel);">
+                                    <th style="padding: 0.75rem;">Domain</th>
+                                    <th style="padding: 0.75rem;">Assumption / Implementation Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Atmosphere Model</td>
+                                    <td style="padding: 0.75rem;">ISA standard atmosphere model. Density varies logarithmically with altitude.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Drag Model</td>
+                                    <td style="padding: 0.75rem;">Mach-dependent $C_d$ coefficient using a simplified piece-wise linear approximation for supersonic transitions.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Wind Model</td>
+                                    <td style="padding: 0.75rem;">Vector wind components with optional discrete altitude shear bands.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Navigation Model</td>
+                                    <td style="padding: 0.75rem;">Perfect state knowledge conceptually degraded by Gaussian noise in GNSS/INS modes.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Actuator Model</td>
+                                    <td style="padding: 0.75rem;">Instantaneous force application decoupled from projectile spin dynamics.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Numerical Integration</td>
+                                    <td style="padding: 0.75rem;">4th-Order Runge-Kutta (RK4) integration with 0.04s timestep (25Hz).</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Sensor Noise</td>
+                                    <td style="padding: 0.75rem;">Modeled as white Gaussian noise across position components based on expected hardware specifications.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Control Model</td>
+                                    <td style="padding: 0.75rem;">Proportional-Derivative (PD) trajectory correction mimicking 2-axis canard actuation against the cross-track error.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Fuze-Event Model</td>
+                                    <td style="padding: 0.75rem;">Evaluates terminal state sequentially (Impact, PD/Time, Proximity) assuming perfect threshold detection with fixed response delays.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Simplifications</td>
+                                    <td style="padding: 0.75rem;">Point-mass kinematics; no 6-DOF moments, pitch/yaw damping, or rigid body rotational dynamics computed.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Unsupported Physics</td>
+                                    <td style="padding: 0.75rem;">Magnus effect, Coriolis force, Epicyclic swerve, and aerodynamic blanking of canards are excluded.</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid var(--border-steel);">
+                                    <td style="padding: 0.75rem; font-weight: bold; color: var(--text-primary);">Known Limitations</td>
+                                    <td style="padding: 0.75rem;">Control authority is approximated as a lateral acceleration rather than physical canard lift equations. Simulation may overstate corrective capability in terminal dive.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SYSTEM ARCHITECTURE ==================== -->
+        <div id="tab-architecture" class="tab-content">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                <div class="panel-card" style="grid-column: 1 / -1;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">System Architecture Diagram</h2>
+                    </div>
+                    <div class="panel-body" style="padding: 20px; text-align: center; background: var(--bg-dark, #0b0f18); border-radius: 8px;">
+                        <div id="mermaid-arch-target" style="background: transparent;"></div>
+                        <script>
+                        (function() {
+                            var diagram = [
+                                'graph TD',
+                                '    classDef hardware fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#f8fafc',
+                                '    classDef logic fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#f8fafc',
+                                '    classDef io fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#f8fafc',
+                                '    subgraph Sensors[Sensors and Input]',
+                                '        GNSS[GNSS Receiver L1/L2/L5]:::hardware',
+                                '        IMU[6-Axis IMU Gyros and Accels]:::hardware',
+                                '        RADAR[FMCW Radar Height of Burst]:::hardware',
+                                '        MAG[Magnetometer Roll]:::hardware',
+                                '    end',
+                                '    subgraph CPU[Central Processing Unit]',
+                                '        FC[Flight Computer Navigation]:::logic',
+                                '        ESAD[Electronic Safe and Arm Device]:::logic',
+                                '    end',
+                                '    subgraph Actuation[Actuation and Effects]',
+                                '        CANARDS[Canard Actuators Pitch/Yaw]:::hardware',
+                                '        DETONATOR[Detonator Bridge]:::hardware',
+                                '        TELEMETRY[Telemetry TX UHF/S-Band]:::io',
+                                '    end',
+                                '    GNSS --> FC',
+                                '    IMU --> FC',
+                                '    MAG --> FC',
+                                '    RADAR --> ESAD',
+                                '    FC --> CANARDS',
+                                '    FC --> TELEMETRY',
+                                '    FC --> ESAD',
+                                '    ESAD --> DETONATOR'
+                            ].join('\n');
+                            function renderDiagram() {
+                                if (typeof mermaid !== 'undefined') {
+                                    var el = document.getElementById('mermaid-arch-target');
+                                    if (el) {
+                                        mermaid.render('mermaid-arch-svg', diagram).then(function(result) {
+                                            el.innerHTML = result.svg;
+                                        }).catch(function(err) {
+                                            el.innerHTML = '<p style="color:#ff9500;padding:1rem;">Diagram unavailable: ' + err.message + '</p>';
+                                        });
+                                    }
+                                } else {
+                                    setTimeout(renderDiagram, 300);
+                                }
+                            }
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', renderDiagram);
+                            } else {
+                                renderDiagram();
+                            }
+                        })();
+                        </script>
+                </div>
+            </div>
+            <div class="panel-card" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <h2 class="panel-title">Subsystem Interface Details</h2>
+                </div>
+                <div class="panel-body" style="padding: 20px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Interface</th>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Protocol</th>
+                                <th>Data Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Nav Data</td>
+                                <td>GNSS/IMU</td>
+                                <td>Flight Computer</td>
+                                <td>SPI / UART</td>
+                                <td>100 Hz</td>
+                            </tr>
+                            <tr>
+                                <td>Control</td>
+                                <td>Flight Computer</td>
+                                <td>Canard Actuators</td>
+                                <td>PWM / CAN</td>
+                                <td>50 Hz</td>
+                            </tr>
+                            <tr>
+                                <td>HoB Data</td>
+                                <td>FMCW Radar</td>
+                                <td>ESAD Processor</td>
+                                <td>I2C / SPI</td>
+                                <td>1 kHz</td>
+                            </tr>
+                            <tr>
+                                <td>Telemetry</td>
+                                <td>Flight Computer</td>
+                                <td>Ground Station</td>
+                                <td>RS-422 / RF</td>
+                                <td>10 Hz</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- TAB: CREDIBILITY -->
+        <div id="tab-credibility" class="tab-content">
+            <div class="panel-card" style="grid-column: 1 / -1;">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        SUBSYSTEM CREDIBILITY MATRICES
+                    </div>
+                </div>
+                <p style="color: #8899aa; font-size: 0.85rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                    This section documents the explicit distinction between simulated models and physically validated hardware. For each critical subsystem, the exact nature of the model, its mathematical assumptions, and its current validation status are transparently disclosed.
+                </p>
+                <div id="credibility-grid" class="credibility-grid">
+                    <!-- Cards will be injected here by credibility.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: VALIDATION -->
+        <div id="tab-validation" class="tab-content">
+            <div class="dashboard-grid">
+
+                <!-- === P3: LIVE COMPLIANCE GAUGE PANEL === -->
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h2 class="panel-title">Validation Compliance Dashboard</h2>
+                        <button id="btn-refresh-validation" class="btn" style="font-size:0.7rem;padding:0.25rem 0.75rem;" onclick="loadValidationSummary()">Refresh</button>
+                    </div>
+
+                    <!-- Gauge + Stats Row -->
+                    <div style="display:flex;gap:1.5rem;margin-top:1.25rem;flex-wrap:wrap;align-items:flex-start;">
+
+                        <!-- SVG Compliance Arc Gauge -->
+                        <div style="display:flex;flex-direction:column;align-items:center;min-width:180px;">
+                            <svg id="compliance-gauge-svg" viewBox="0 0 200 120" width="200" height="120">
+                                <defs>
+                                    <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stop-color="#ef4444"/>
+                                        <stop offset="50%" stop-color="#f59e0b"/>
+                                        <stop offset="100%" stop-color="#10b981"/>
+                                    </linearGradient>
+                                </defs>
+                                <!-- Background arc -->
+                                <path d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14" stroke-linecap="round"/>
+                                <!-- Filled arc - JS updates stroke-dasharray -->
+                                <path id="gauge-arc" d="M 20 110 A 80 80 0 0 1 180 110" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"
+                                    stroke-dasharray="0 251" style="transition:stroke-dasharray 0.8s ease;"/>
+                                <!-- Center text -->
+                                <text id="gauge-pct-text" x="100" y="105" text-anchor="middle" fill="#f0f4f8" font-size="28" font-weight="700" font-family="monospace">--</text>
+                                <text x="100" y="118" text-anchor="middle" fill="#8899aa" font-size="9" font-family="monospace">COMPLIANCE</text>
+                            </svg>
+                            <div style="font-size:0.65rem;color:var(--text-dim);margin-top:0.25rem;text-align:center;">Simulated + Passed / Total</div>
+                        </div>
+
+                        <!-- Count Cards -->
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;flex:1;min-width:320px;">
+                            <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);padding:0.75rem;border-radius:8px;">
+                                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.25rem;">SIMULATED</div>
+                                <div id="count-simulated" style="font-size:1.8rem;font-weight:700;color:var(--accent-emerald);font-family:var(--font-mono);">--</div>
+                            </div>
+                            <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);padding:0.75rem;border-radius:8px;">
+                                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.25rem;">DESIGN ESTIMATE</div>
+                                <div id="count-design" style="font-size:1.8rem;font-weight:700;color:rgb(96,165,250);font-family:var(--font-mono);">--</div>
+                            </div>
+                            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);padding:0.75rem;border-radius:8px;">
+                                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.25rem;">PENDING</div>
+                                <div id="count-pending" style="font-size:1.8rem;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">--</div>
+                            </div>
+                            <div style="background:rgba(0,229,255,0.07);border:1px solid rgba(0,229,255,0.2);padding:0.75rem;border-radius:8px;">
+                                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.25rem;">TOTAL REQUIREMENTS</div>
+                                <div id="count-total" style="font-size:1.8rem;font-weight:700;color:var(--accent-cyan);font-family:var(--font-mono);">--</div>
+                            </div>
+                            <div style="background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);padding:0.75rem;border-radius:8px;">
+                                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.25rem;">EVIDENCE COVERAGE</div>
+                                <div id="count-evidence" style="font-size:1.8rem;font-weight:700;color:var(--accent-emerald);font-family:var(--font-mono);">--%</div>
+                            </div>
+                            <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);padding:0.75rem;border-radius:8px;">
+                                <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.25rem;">UNMET CRITICAL</div>
+                                <div id="count-unmet-critical" style="font-size:1.8rem;font-weight:700;color:var(--tactical-red);font-family:var(--font-mono);">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unmet Critical Requirements Alert -->
+                    <div id="unmet-critical-panel" style="margin-top:1.25rem;display:none;">
+                        <div style="border-left:4px solid var(--tactical-red);background:rgba(239,68,68,0.08);padding:1rem;border-radius:0 6px 6px 0;">
+                            <h3 style="color:var(--tactical-red);font-size:0.85rem;margin-bottom:0.5rem;">Unmet Critical Requirements</h3>
+                            <div id="unmet-critical-list" style="font-size:0.8rem;color:var(--text-secondary);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Status explanation legend -->
+                    <div style="margin-top:1.25rem;display:flex;gap:1rem;flex-wrap:wrap;">
+                        <span style="font-size:0.7rem;color:var(--text-dim);">Status legend:</span>
+                        <span style="font-size:0.7rem;background:rgba(16,185,129,0.2);color:var(--accent-emerald);padding:0.1rem 0.4rem;border-radius:4px;">SIMULATED</span> — backed by Monte Carlo evidence
+                        <span style="font-size:0.7rem;background:rgba(59,130,246,0.2);color:rgb(96,165,250);padding:0.1rem 0.4rem;border-radius:4px;">DESIGN ESTIMATE</span> — analytical estimate only
+                        <span style="font-size:0.7rem;background:rgba(245,158,11,0.1);color:var(--accent-amber);padding:0.1rem 0.4rem;border-radius:4px;">PENDING</span> — not yet validated
+                    </div>
+                </div>
+
+                <!-- Static validation evidence rows -->
+                <div class="panel-card" style="grid-column: span 3;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Validation Center — Test Evidence Log</h2>
+                    </div>
+                    <div style="margin-top: 1rem; overflow-x: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                    <th style="padding: 0.75rem;">Subsystem</th>
+                                    <th style="padding: 0.75rem;">Test</th>
+                                    <th style="padding: 0.75rem;">Method</th>
+                                    <th style="padding: 0.75rem;">Expected Result</th>
+                                    <th style="padding: 0.75rem;">Actual Result</th>
+                                    <th style="padding: 0.75rem;">Status</th>
+                                    <th style="padding: 0.75rem;">Evidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.75rem; color: var(--text-primary);">Physics Model</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">3D Point-Mass Trajectory</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">Software Unit Test</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">Matches NATO Armament ballistic tables within 5%</td>
+                                    <td style="padding: 0.75rem; color: var(--accent-emerald);">PASS (Mean error &lt; 2%)</td>
+                                    <td style="padding: 0.75rem;"><span style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">IMPLEMENTED</span></td>
+                                    <td style="padding: 0.75rem; color: var(--accent-cyan);">Unit Test Suite</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.75rem; color: var(--text-primary);">Navigation Simulation</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">GPS/INS Sensor Fusion</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">Scenario Simulation</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">Trajectory corrects against stochastic noise</td>
+                                    <td style="padding: 0.75rem; color: var(--accent-emerald);">PASS (Demonstrates CEP reduction)</td>
+                                    <td style="padding: 0.75rem;"><span style="background: rgba(16,185,129,0.2); color: var(--accent-emerald); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">SIMULATED</span></td>
+                                    <td style="padding: 0.75rem; color: var(--accent-cyan);">Monte Carlo Output</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.75rem; color: var(--text-primary);">Actuation Demonstrator</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">2-Axis Canard Deflection</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">Software-Commanded Bench Test (Inert)</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">Servos respond to PWM telemetry &lt;50ms</td>
+                                    <td style="padding: 0.75rem; color: var(--accent-amber);">PENDING — No in-flight conditions simulated</td>
+                                    <td style="padding: 0.75rem;"><span style="background: rgba(245,158,11,0.2); color: var(--accent-amber); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">NOT_VALIDATED</span></td>
+                                    <td style="padding: 0.75rem; color: var(--accent-cyan);">SIL Telemetry Demo</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.75rem; color: var(--text-primary);">High-G Survivability</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">18,000g Setback Shock</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">Validation Test</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">Electronics function post-launch</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">NOT PERFORMED</td>
+                                    <td style="padding: 0.75rem;"><span style="background: rgba(100,116,139,0.2); color: var(--text-dim); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">NOT VALIDATED</span></td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">None</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 0.75rem; color: var(--text-primary);">Control Algorithm</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">PD Loop Tuning</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">Design Target Validation</td>
+                                    <td style="padding: 0.75rem; color: var(--text-secondary);">Damping limits overcorrection</td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">PENDING TUNING</td>
+                                    <td style="padding: 0.75rem;"><span style="background: rgba(59,130,246,0.2); color: rgb(59,130,246); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: bold; font-size: 0.7rem;">DESIGN TARGET</span></td>
+                                    <td style="padding: 0.75rem; color: var(--text-dim);">None</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB: TEST CENTER -->
+
+        <div id="tab-test-center" class="tab-content">
+            <div class="dashboard-grid">
+                <!-- Record New Test Run Form -->
+                <div class="panel-card" style="grid-column: span 1;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Record Test Execution</h2>
+                    </div>
+                    <form id="form-new-test-run" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>
+                            <label style="font-size: 0.7rem; color: var(--text-dim);">Objective</label>
+                            <input type="text" id="test-objective" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div>
+                                <label style="font-size: 0.7rem; color: var(--text-dim);">Model Version</label>
+                                <input type="text" id="test-model" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.7rem; color: var(--text-dim);">Software Version</label>
+                                <input type="text" id="test-software" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div>
+                                <label style="font-size: 0.7rem; color: var(--text-dim);">Hardware Version</label>
+                                <input type="text" id="test-hardware" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                            </div>
+                            <div>
+                                <label style="font-size: 0.7rem; color: var(--text-dim);">Configuration</label>
+                                <input type="text" id="test-config" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; color: var(--text-dim);">Expected Result</label>
+                            <input type="text" id="test-expected" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; color: var(--text-dim);">Observed Result</label>
+                            <input type="text" id="test-observed" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div>
+                                <label style="font-size: 0.7rem; color: var(--text-dim);">Status</label>
+                                <select id="test-status" required style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                                    <option value="PASS">PASS</option>
+                                    <option value="FAIL">FAIL</option>
+                                    <option value="BLOCKED">BLOCKED</option>
+                                    <option value="PENDING">PENDING</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.7rem; color: var(--text-dim);">Source Type</label>
+                                <input type="text" id="test-source" value="MANUAL" style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; color: var(--text-dim);">Evidence References (e.g. DOC-123)</label>
+                            <input type="text" id="test-evidence" style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.7rem; color: var(--text-dim);">Notes</label>
+                            <textarea id="test-notes" rows="2" style="width: 100%; background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.3rem;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">💾 RECORD TEST</button>
+                    </form>
+                </div>
+
+                <div class="panel-card" style="grid-column: span 2;">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 class="panel-title">Test Center & Historical Runs</h2>
+                        <div>
+                            <select id="compare-test-1" style="background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.25rem; margin-right: 0.5rem; font-family: var(--font-mono); font-size: 0.75rem;">
+                                <option value="">Select Test 1</option>
+                            </select>
+                            <select id="compare-test-2" style="background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-steel); padding: 0.25rem; margin-right: 0.5rem; font-family: var(--font-mono); font-size: 0.75rem;">
+                                <option value="">Select Test 2</option>
+                            </select>
+                            <button id="btn-compare-tests" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Compare</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Comparison Output Area -->
+                    <div id="test-comparison-area" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border: 1px dashed var(--border-steel); border-radius: var(--radius-md);">
+                        <h3 style="color: var(--accent-cyan); font-size: 0.85rem; margin-bottom: 0.5rem;">Comparison Results</h3>
+                        <div id="test-comparison-content" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap;"></div>
+                    </div>
+
+                    <div style="margin-top: 1rem; overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.8rem;">
+                            <thead style="position: sticky; top: 0; background: var(--bg-panel); z-index: 10;">
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                    <th style="padding: 0.5rem;">Test ID</th>
+                                    <th style="padding: 0.5rem;">Date</th>
+                                    <th style="padding: 0.5rem;">Objective</th>
+                                    <th style="padding: 0.5rem;">Versions (M/S/H)</th>
+                                    <th style="padding: 0.5rem;">Config</th>
+                                    <th style="padding: 0.5rem;">Expected</th>
+                                    <th style="padding: 0.5rem;">Observed</th>
+                                    <th style="padding: 0.5rem;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="test-center-table-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 8: RAW DATA -->
+        <!-- TAB: FAULT INJECTION LAB -->
+        <div id="tab-faults" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="panel-card" style="grid-column: span 1;">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Inject Fault</h2>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+                        <button class="btn btn-fault" data-fault="GNSS_LOSS">GNSS Unavailable</button>
+                        <button class="btn btn-fault" data-fault="SENSOR_BIAS">Sensor Bias</button>
+                        <button class="btn btn-fault" data-fault="SENSOR_DROPOUT">Sensor Dropout</button>
+                        <button class="btn btn-fault" data-fault="TELEMETRY_DROPOUT">Telemetry Dropout</button>
+                        <button class="btn btn-fault" data-fault="ACTUATOR_SATURATION">Actuator Saturation</button>
+                        <button class="btn btn-fault" data-fault="TIMING_JITTER">Timing Jitter</button>
+                        <button class="btn btn-fault" data-fault="POWER_BROWNOUT" style="border-color: var(--accent-orange); color: var(--accent-orange);">Power Brownout</button>
+                    </div>
+                </div>
+                
+                <div class="panel-card" style="grid-column: span 2;">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 class="panel-title">Fault Event Log</h2>
+                        <button id="btn-clear-faults" class="btn" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">Clear Log</button>
+                    </div>
+                    <div style="margin-top: 1rem; overflow-x: auto; max-height: 400px; overflow-y: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                    <th style="padding: 0.75rem;">Time</th>
+                                    <th style="padding: 0.75rem;">Fault</th>
+                                    <th style="padding: 0.75rem;">Detection</th>
+                                    <th style="padding: 0.75rem;">System Response</th>
+                                    <th style="padding: 0.75rem;">Recovery Mode</th>
+                                    <th style="padding: 0.75rem;">Log ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fault-log-body">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-raw-data" class="tab-content" style="width: 100%; height: 100%;">
+            <div class="panel-card" style="height: 100%; max-width: 1200px; margin: 0 auto; margin-top: 1rem;">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                        Raw Trajectory Data
+                    </h2>
+                </div>
+                <div style="overflow-x: auto; height: calc(100vh - 200px); overflow-y: auto;">
+                    <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;" id="raw-data-table">
+                        <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                            <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                                <th style="padding: 0.75rem;">Time (s)</th>
+                                <th style="padding: 0.75rem;">X (m)</th>
+                                <th style="padding: 0.75rem;">Y (m)</th>
+                                <th style="padding: 0.75rem;">Z (m)</th>
+                                <th style="padding: 0.75rem;">Vel (m/s)</th>
+                                <th style="padding: 0.75rem;">Mach</th>
+                            </tr>
+                        </thead>
+                        <tbody id="raw-data-table-body">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-dim); font-style: italic;">
+                                    No trajectory data available.<br><br>
+                                    <span style="color: var(--accent-amber);">Run a standard <strong>Flight Simulation</strong></span> to populate raw telemetry.<br>
+                                    (Note: Monte Carlo runs produce aggregate CEP metrics and do not generate per-tick raw trajectory data.)
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <div id="tab-audit" class="tab-content" style="width: 100%; height: 100%;">
+        <div class="panel-card" style="height: 100%; max-width: 1200px; margin: 0 auto; margin-top: 1rem;">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Security & Audit Logs
+                </h2>
+            </div>
+            <div style="overflow-x: auto; height: calc(100vh - 200px); overflow-y: auto;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem;" id="audit-data-table">
+                    <thead style="position: sticky; top: 0; background: var(--bg-card); z-index: 10;">
+                        <tr style="border-bottom: 1px solid var(--border-steel); color: var(--accent-cyan);">
+                            <th style="padding: 0.75rem;">Log ID</th>
+                            <th style="padding: 0.75rem;">Timestamp</th>
+                            <th style="padding: 0.75rem;">Actor</th>
+                            <th style="padding: 0.75rem;">Action</th>
+                            <th style="padding: 0.75rem;">Entity ID</th>
+                            <th style="padding: 0.75rem;">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-table-body">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <span>Aegis-155 Precision Guidance Kit — Defence R&D Simulation Platform</span>
+        <span>3D Reduced-Order Flight Dynamics Simulator · WebGL Visualization / Cesium</span>
+    </footer>
+
+    <!-- Application Script -->
+    <script type="module" src="js/main.js?v=BUILD6"></script>
+    <!-- Hidden container for printable report -->
+    <div id="report-container" class="print-only"></div>
+
+</body>
+</html>

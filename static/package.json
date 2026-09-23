@@ -1,0 +1,18 @@
+{
+  "name": "sih-26098-pgk-artillery",
+  "version": "2.2.0",
+  "description": "",
+  "main": "js/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "http-server -p 8000",
+    "test": "node --test test/physics.test.js"
+  },
+  "bugs": {
+    "url": "https://github.com/Lakshyagupta23/sih-26098-pgk-artillery/issues"
+  },
+  "homepage": "https://github.com/Lakshyagupta23/sih-26098-pgk-artillery#readme",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
