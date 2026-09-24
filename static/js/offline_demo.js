@@ -10,6 +10,7 @@
 
 const CONNECTIVITY_POLL_MS = 5000;
 let lastConnectivityState = null;
+let failedAttempts = 0;
 
 async function checkConnectivity() {
     const banner = document.getElementById('offline-status-banner');
@@ -22,6 +23,7 @@ async function checkConnectivity() {
     try {
         const res = await fetch('/api/health', { signal: AbortSignal.timeout(2500) });
         if (res.ok) {
+            failedAttempts = 0;
             if (cesiumOffline) {
                 // Backend OK but Cesium offline
                 if (lastConnectivityState !== 'PARTIAL') {
@@ -44,16 +46,19 @@ async function checkConnectivity() {
         }
     } catch {
         // Backend unreachable
-        if (lastConnectivityState !== 'OFFLINE') {
-            lastConnectivityState = 'OFFLINE';
-            banner.style.display = 'block';
-            banner.style.background = 'rgba(220,38,38,0.9)';
-            banner.style.color = '#fff';
-            icon.textContent = '🔴';
-            text.textContent = 'OFFLINE DEMO MODE — Backend unavailable · Showing pre-seeded simulation results';
+        failedAttempts++;
+        if (failedAttempts >= 12) { // 60 seconds grace period
+            if (lastConnectivityState !== 'OFFLINE') {
+                lastConnectivityState = 'OFFLINE';
+                banner.style.display = 'block';
+                banner.style.background = 'rgba(220,38,38,0.9)';
+                banner.style.color = '#fff';
+                icon.textContent = '🔴';
+                text.textContent = 'OFFLINE DEMO MODE — Backend unavailable · Showing pre-seeded simulation results';
 
-            // Activate demo data for any visible panels
-            activateDemoMode();
+                // Activate demo data for any visible panels
+                activateDemoMode();
+            }
         }
     }
 }

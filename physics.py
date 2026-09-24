@@ -62,7 +62,7 @@ def _run_single_mc_iteration(kwargs):
     engine.init_flight(customAngle=angle, customWindX=windX, customWindZ=windZ, customPgk=False, customMv=mv)
     stepsU = 0
     while not engine.state.detonated and stepsU < 4000:
-        engine.step(0.04)
+        engine.step(0.1)
         stepsU += 1
         
     ptU = engine.state.detonationPoint if engine.state.detonationPoint else {'x': engine.state.x, 'y': engine.state.y, 'z': engine.state.z}
@@ -81,8 +81,8 @@ def _run_single_mc_iteration(kwargs):
     stepsG = 0
     traj = []
     while not engine.state.detonated and stepsG < 4000:
-        engine.step(0.04)
-        if stepsG % 10 == 0:  # decimate for rendering performance
+        engine.step(0.1)
+        if stepsG % 4 == 0:  # decimate for rendering performance
             traj.append([float(engine.state.x), float(engine.state.y), float(engine.state.z)])
         stepsG += 1
         
@@ -612,8 +612,8 @@ class BallisticsEngine:
         guidedImpacts = []
         guidedTrajectories = []
         
-        # Distribute workload across available CPU cores for maximum performance
-        max_workers = os.cpu_count() or 4
+        # Hardcode to 2 workers to prevent Render free tier out-of-memory (OOM) errors
+        max_workers = 2
         
         completed_count = 0
         
