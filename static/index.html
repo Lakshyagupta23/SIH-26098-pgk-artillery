@@ -1082,38 +1082,167 @@
 
         </div>
 
-        <!-- TAB: HARDWARE TELEMETRY -->
+        <!-- TAB: HARDWARE TELEMETRY & HITL DIGITAL TWIN -->
         <div id="tab-telemetry" class="tab-content">
-            <div class="dashboard-grid">
-                <div class="panel-card" style="grid-column: span 1;">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Serial Connection</h2>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <button id="btn-connect-ws" class="btn">Connect Dashboard</button>
-                        <button id="btn-disconnect-ws" class="btn" style="border-color: var(--accent-orange); color: var(--accent-orange); display: none;">Disconnect</button>
-                    </div>
-                    <div id="ws-status" style="margin-top: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);">Status: Disconnected</div>
-                </div>
+            <div class="telemetry-dashboard">
                 
-                <div class="panel-card" style="grid-column: span 2;">
-                    <div class="panel-header">
-                        <h2 class="panel-title">Live Sensor Stream</h2>
+                <!-- Connection & Control Bar -->
+                <div class="telemetry-control-bar">
+                    <div class="telemetry-control-group">
+                        <span class="telemetry-sensor-title">Benchtop Hardware Gateway</span>
+                        <div id="usb-status" class="telemetry-status-badge">Status: USB Disconnected</div>
                     </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem; height: 100%;">
-                        <div style="flex: 1; background: #040509; border: 1px solid var(--border-steel); padding: 1rem; font-family: var(--font-mono); font-size: 0.85rem; color: #00ff66; white-space: pre-wrap; overflow-y: auto; max-height: 300px;" id="telemetry-log">Waiting for data...</div>
+                    <div class="telemetry-control-group">
+                        <label for="serial-baud-rate" class="telemetry-sub-label">Baud Rate:</label>
+                        <select id="serial-baud-rate" class="telemetry-select">
+                            <option value="115200" selected>115200 Baud</option>
+                            <option value="9600">9600 Baud</option>
+                            <option value="57600">57600 Baud</option>
+                            <option value="38400">38400 Baud</option>
+                        </select>
+                        <button id="btn-connect-usb" class="btn btn-primary">Connect Arduino (USB)</button>
+                        <button id="btn-disconnect-usb" class="btn" style="display: none;">Disconnect USB</button>
+                        <button id="btn-connect-ws" class="btn">Connect WebSocket</button>
+                        <button id="btn-disconnect-ws" class="btn" style="display: none;">Disconnect WS</button>
+                    </div>
+                </div>
+
+                <!-- Live Sensor Metrics Grid -->
+                <div class="telemetry-grid-4">
+                    
+                    <!-- Card 1: MPU6050 Accelerometer -->
+                    <div class="telemetry-sensor-card">
+                        <div class="telemetry-sensor-card-header">
+                            <span class="telemetry-sensor-title">Inertial Sensor</span>
+                            <span class="telemetry-sensor-tag">MPU-6050</span>
+                        </div>
+                        <div class="telemetry-sensor-hero">
+                            <span id="val-net-g" class="telemetry-sensor-value-large">0.00</span>
+                            <span class="telemetry-sensor-unit">G Net</span>
+                        </div>
+                        <div class="telemetry-sensor-breakdown">
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Accel X</span>
+                                <span id="val-accel-x" class="telemetry-sub-val">-- m/s²</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Accel Y</span>
+                                <span id="val-accel-y" class="telemetry-sub-val">-- m/s²</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Accel Z</span>
+                                <span id="val-accel-z" class="telemetry-sub-val">-- m/s²</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Pitch / Roll</span>
+                                <span id="val-pitch-roll" class="telemetry-sub-val">0.0° / 0.0°</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: BMP280 Barometer & Environment -->
+                    <div class="telemetry-sensor-card">
+                        <div class="telemetry-sensor-card-header">
+                            <span class="telemetry-sensor-title">Barometric Air Data</span>
+                            <span class="telemetry-sensor-tag">BMP280</span>
+                        </div>
+                        <div class="telemetry-sensor-hero">
+                            <span id="val-bmp-pressure" class="telemetry-sensor-value-large">--</span>
+                            <span class="telemetry-sensor-unit">hPa</span>
+                        </div>
+                        <div class="telemetry-sensor-breakdown">
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Temperature</span>
+                                <span id="val-bmp-temp" class="telemetry-sub-val">-- °C</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Baro Altitude</span>
+                                <span id="val-bmp-alt" class="telemetry-sub-val">-- m</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Air Density (ρ)</span>
+                                <span id="val-bmp-density" class="telemetry-sub-val">-- kg/m³</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Sensor Health</span>
+                                <span id="val-bmp-health" class="telemetry-sub-val">Nominal</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: NEO-6M Satellite Navigation -->
+                    <div class="telemetry-sensor-card">
+                        <div class="telemetry-sensor-card-header">
+                            <span class="telemetry-sensor-title">Satellite Navigation</span>
+                            <span class="telemetry-sensor-tag">NEO-6M GNSS</span>
+                        </div>
+                        <div class="telemetry-sensor-hero">
+                            <span id="val-gps-status" class="telemetry-sensor-value-large" style="font-size: 1.15rem; color: var(--op-amber);">Waiting for fix...</span>
+                        </div>
+                        <div class="telemetry-sensor-breakdown">
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Nav Mode</span>
+                                <span id="val-gps-mode" class="telemetry-sub-val">Coupled EKF</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Satellites</span>
+                                <span id="val-gps-sats" class="telemetry-sub-val">Searching</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Latitude</span>
+                                <span id="val-gps-lat" class="telemetry-sub-val">--</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Longitude</span>
+                                <span id="val-gps-lon" class="telemetry-sub-val">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Attitude Horizon & Hardware State -->
+                    <div class="telemetry-sensor-card">
+                        <div class="telemetry-sensor-card-header">
+                            <span class="telemetry-sensor-title">Attitude Indicator</span>
+                            <span class="telemetry-sensor-tag">Real-Time HITL</span>
+                        </div>
+                        <div class="attitude-canvas-container">
+                            <canvas id="canvas-attitude" class="attitude-canvas" width="130" height="130"></canvas>
+                        </div>
+                        <div class="telemetry-sensor-breakdown">
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Frame Count</span>
+                                <span id="val-packet-count" class="telemetry-sub-val">0</span>
+                            </div>
+                            <div class="telemetry-sub-metric">
+                                <span class="telemetry-sub-label">Update Rate</span>
+                                <span id="val-stream-hz" class="telemetry-sub-val">0 Hz</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Live Stream Log & Rationale -->
+                <div class="telemetry-console-wrapper">
+                    <div>
+                        <div class="telemetry-sensor-card-header">
+                            <span class="telemetry-sensor-title">Live Serial Packet Terminal</span>
+                            <button id="btn-clear-telemetry-log" class="btn" style="font-size: 0.7rem; padding: 0.2rem 0.6rem;">Clear Log</button>
+                        </div>
+                        <div id="telemetry-log" class="telemetry-log-box">Waiting for serial connection (Click 'Connect Arduino (USB)' above)...</div>
                     </div>
                     
-                    <div style="margin-top: 1.5rem; padding: 1rem; border-left: 4px solid var(--tactical-orange); background: rgba(255,160,0,0.1); border-radius: 0 4px 4px 0;">
-                        <h3 style="color: var(--tactical-orange); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="telemetry-rationale-box">
+                        <h3 class="telemetry-rationale-title">
                             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            Design Rationale: Thermal Reserve Battery vs Ram-Air Turbine
+                            Design Rationale: Thermal Battery
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
-                            The Aegis-155 utilizes a <strong>Thermal Reserve Battery Pack</strong> instead of a traditional Ram-Air Turbine (RAT). At setback forces exceeding 15,000g, rotating mechanical components in a RAT are highly susceptible to bearing shear and structural failure. A thermal battery remains completely inert until firing, providing a 20+ year shelf life, zero moving parts, and guaranteed activation under extreme gun-launch shock via pyrotechnic squib.
+                        <p class="telemetry-rationale-body">
+                            The Aegis-155 utilizes a <strong>Thermal Reserve Battery Pack</strong> instead of a Ram-Air Turbine (RAT). At setback forces exceeding 15,000g, rotating RAT components are susceptible to bearing shear. A thermal battery remains inert until firing, offering 20+ years of maintenance-free shelf life and guaranteed pyrotechnic activation during launch shock.
                         </p>
                     </div>
                 </div>
+
             </div>
         </div>
 
