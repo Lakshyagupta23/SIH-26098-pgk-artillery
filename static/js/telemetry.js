@@ -192,15 +192,15 @@ export class TelemetryModule {
     // LINE PARSER FOR ARDUINO FORMAT
     // ============================================================
     parseLine(line) {
-        // Format 1: [MPU] Accel X: -4.60 m/s^2 (or Y, Z)
+        // Format 1: [MPU] Accel X: -4.60 m/s^2 (or Y, Z / Gyro)
         if (line.includes('[MPU]')) {
-            const matchAccelX = line.match(/Accel\s*X:\s*([-\d.]+)/i);
-            const matchAccelY = line.match(/Accel\s*Y:\s*([-\d.]+)/i);
-            const matchAccelZ = line.match(/Accel\s*Z:\s*([-\d.]+)/i);
+            const matchAccelX = line.match(/(?:Accel\s*X|aX|X)\s*[:=]\s*([-\d.]+)/i);
+            const matchAccelY = line.match(/(?:Accel\s*Y|aY|Y)\s*[:=]\s*([-\d.]+)/i);
+            const matchAccelZ = line.match(/(?:Accel\s*Z|aZ|Z)\s*[:=]\s*([-\d.]+)/i);
 
-            const matchGyroX = line.match(/Gyro\s*X:\s*([-\d.]+)/i);
-            const matchGyroY = line.match(/Gyro\s*Y:\s*([-\d.]+)/i);
-            const matchGyroZ = line.match(/Gyro\s*Z:\s*([-\d.]+)/i);
+            const matchGyroX = line.match(/(?:Gyro\s*X|gX)\s*[:=]\s*([-\d.]+)/i);
+            const matchGyroY = line.match(/(?:Gyro\s*Y|gY)\s*[:=]\s*([-\d.]+)/i);
+            const matchGyroZ = line.match(/(?:Gyro\s*Z|gZ)\s*[:=]\s*([-\d.]+)/i);
 
             if (matchAccelX) this.accel.x = parseFloat(matchAccelX[1]);
             if (matchAccelY) this.accel.y = parseFloat(matchAccelY[1]);
@@ -216,8 +216,8 @@ export class TelemetryModule {
 
         // Format 2: [BMP] Temp: 29.34 C | Pressure: 986.16 hPa
         if (line.includes('[BMP]')) {
-            const matchTemp = line.match(/Temp:\s*([-\d.]+)/i);
-            const matchPressure = line.match(/Pressure:\s*([-\d.]+)/i);
+            const matchTemp = line.match(/(?:Temp(?:erature)?|T)\s*[:=]\s*([-\d.]+)/i);
+            const matchPressure = line.match(/(?:Press(?:ure)?|P)\s*[:=]\s*([-\d.]+)/i);
 
             if (matchTemp) this.temperature = parseFloat(matchTemp[1]);
             if (matchPressure) this.pressure = parseFloat(matchPressure[1]);
@@ -228,16 +228,16 @@ export class TelemetryModule {
 
         // Format 3: [GPS] Waiting for satellite fix... or GPS coordinates
         if (line.includes('[GPS]')) {
-            if (line.includes('Waiting for satellite fix')) {
+            if (line.includes('Waiting for satellite fix') || line.includes('Searching') || line.includes('No fix')) {
                 if (this.valGpsStatus) {
                     this.valGpsStatus.textContent = 'Searching for Satellites...';
                     this.valGpsStatus.style.color = 'var(--op-amber)';
                 }
                 if (this.valGpsSats) this.valGpsSats.textContent = '0 Sats';
             } else {
-                const matchLat = line.match(/Lat:\s*([-\d.]+)/i);
-                const matchLon = line.match(/Lon:\s*([-\d.]+)/i);
-                const matchSats = line.match(/Sats:\s*(\d+)/i);
+                const matchLat = line.match(/(?:Lat(?:itude)?)\s*[:=]\s*([-\d.]+)/i);
+                const matchLon = line.match(/(?:Lon(?:gitude)?)\s*[:=]\s*([-\d.]+)/i);
+                const matchSats = line.match(/(?:Sats?|Satellites?)\s*[:=]\s*(\d+)/i);
 
                 if (this.valGpsStatus) {
                     this.valGpsStatus.textContent = '3D Fix Acquired (NavIC/GPS)';
