@@ -1,21 +1,22 @@
-# Design Specification (Design.md)
-## AEGIS-155: Precision Guidance Kit UI
+# Design Specification
 
-### 1. Visual Aesthetics
-The user interface avoids generic AI-generated "Bento Grids" and standard component aesthetics.
-- **Palette**: Deep slate/obsidian (`#040608` to `#121820`) backgrounds.
-- **Accents**: Warm sand/terracotta (`#B8862D`), deep emerald (`#348A59`), and muted teal (`#4A8B9F`).
-- **Borders**: Thin chrome/gold gradients instead of thick flat borders.
-- **Glassmorphism**: Subtle, refined frosted glass (`backdrop-filter: blur(16px)`) applied sparingly to major panel cards, avoiding the overused "liquid glass" look.
+## AEGIS-155: Precision Guidance Kit & Tactical Mission Control UI
 
-### 2. Typography
-- **Headings & Base Text**: *Space Grotesk* and *Outfit* (sans-serif) for premium readability and distinction from default AI-generated Inter/Geist fonts.
-- **Data Readouts**: *JetBrains Mono* for telemetry to provide industrial/engineering authenticity without feeling cliché.
+### 1. Visual Hierarchy & Theme Architecture
+The AEGIS-155 tactical dashboard utilizes a military-grade, low-light dark aesthetic engineered for high situational awareness, prolonged operator comfort, and high contrast during data readout.
+- **Base Surfaces**: Multi-tiered obsidian and slate foundation (`#040608` to `#121820`) providing optical depth without glare.
+- **Accent & Status Accents**: 
+  - Muted Terracotta/Gold (`#B8862D`): Mission status, trajectory locks, and primary triggers.
+  - Tactical Emerald (`#348A59`): Nominal subsystems, healthy telemetry, and ESAD arming confirmation.
+  - Ballistic Cyan/Teal (`#4A8B9F`): Atmospheric and EKF state vectors.
+  - Threat Amber / Red (`#E05D44`): Fuze fail-safes, sensor faults, and trajectory deviation warnings.
+- **Borders & Framing**: Subdued high-precision gradient borders (1px hairline) to delineate critical sensor pods without visual clutter.
+- **Glassmorphism**: Controlled frosted backdrop filtration (`backdrop-filter: blur(16px)`) applied to mission control cards for layered depth over 3D trajectory layers.
 
-### 3. Layout Architecture
-- **Fluid & Asymmetrical**: Uses custom `minmax` column proportions (e.g., 22% / 1fr / 18%) instead of strict 33/33/33 grids.
-- **Micro-animations**: Smooth hover scaling, fluid box-shadow transitions, and element slide-ins (similar to React-Spring physics) used for interactivity on panels and buttons.
+### 2. Typography & Readout Standards
+- **Display & Section Headers**: *Space Grotesk* and *Outfit* provide ergonomic readability across command overview modules and structural breakdowns.
+- **Tactical Data Readouts**: *JetBrains Mono* is standard for real-time telemetry tables, EKF covariance matrices, coordinates, and timestamp logs to preserve numeric column alignment.
 
-### 4. Directives Met
-- High-quality, distinct presentation.
-- No dot grids, pure white backgrounds, rainbow coloring, or overused soft-corner radiuses.
+### 3. Layout & Ergonomics
+- **Proportional Geometry**: Employs an asymmetric multi-column command arrangement (22% / 1fr / 18%) balancing subsystem telemetry, centralized 3D trajectory rendering (CesiumJS/Three.js), and quick-action ballistics controls.
+- **Micro-interactions**: Hardware-accelerated hover transitions, fluid card elevation shifts, and state updates designed to emulate physical avionics displays.
